@@ -5,7 +5,8 @@ function onLoad() {
 }
 
 function onDeviceReady() {
-	console.log("DEVICE READY");
+	getById("#log").innerHTML = "";
+	logit("DEVICE READY");
 	//request the persistent file system
 	window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFSSuccess, onError);
 }
@@ -16,20 +17,21 @@ function getById(id) {
 }
 //generic content logger
 function logit(s) {
-    getById("#content").innerHTML = s;
+	getById("#log").innerHTML += "<p>" + s + "</p>";
 	console.log(s);
 }
 
 //generic error handler
 function onError(e) {
 	var errNr = e.code;
-
-    getById("#content").innerHTML = "<h2>Error</h2>" + errNr;
-	logit("error:");
+	alert("Error: " + errNr);
+	logit("Error:");
 	logit(e);
 }
 
 function doDeleteFile(e) {
+	getById("#log").innerHTML = "";
+	//TODO: create:true - create file if not exist!!!
     fileSystem.root.getFile("test.txt", {create:false}, function(f) {
         f.remove(function() {
             logit("File removed");
@@ -38,46 +40,54 @@ function doDeleteFile(e) {
 }
 
 function metadataFile(m) {
-    logit("File was last modified "+m.modificationTime);
+    logit("File was last modified " + m.modificationTime);
 }
 
 function doMetadataFile(e) {
+	getById("#log").innerHTML = "";
     fileSystem.root.getFile("test.txt", {create:true}, function(f) {
         f.getMetadata(metadataFile,onError);
     }, onError);
 }
 
 function readFile(f) {
+	getById("#log").innerHTML = "";
     reader = new FileReader();
     reader.onloadend = function(e) {
-        console.log("go to end");
-        logit("<pre>" + e.target.result + "</pre><p/>");
+        logit("go to end");
+		logit(e)
+        logit(e.target.result);
     }
     reader.readAsText(f);
+	logit(reader);
 }
 
 function doReadFile(e) {
+	getById("#log").innerHTML = "";
     fileSystem.root.getFile("test.txt", {create:true}, readFile, onError);
 }
 
 function appendFile(f) {
-
+	var str= "";
+	str = "Test at " + new Date().toString() + "\n";
     f.createWriter(function(writerOb) {
         writerOb.onwrite=function() {
-            logit("Done writing to file.<p/>");
+            logit("Done writing to file: " + str);
         }
         //go to the end of the file...
         writerOb.seek(writerOb.length);
-        writerOb.write("Test at "+new Date().toString() + "\n");
+        writerOb.write(str);
     })
 
 }
 
 function doAppendFile(e) {
+	getById("#log").innerHTML = "";
     fileSystem.root.getFile("test.txt", {create:true}, appendFile, onError);
 }
 
 function gotFiles(entries) {
+	getById("#log").innerHTML = "";
 	logit("===== File's: ===");
     var s = "";
     for(var i=0,len=entries.length; i<len; i++) {
@@ -112,7 +122,7 @@ function onFSSuccess(fs) {
     getById("#metadataFileButton").addEventListener("touchstart",doMetadataFile);            
     getById("#deleteFileButton").addEventListener("touchstart",doDeleteFile);
     
-    logit( "<p>Got the file system: " + fileSystem.name + "<br/>" + "root entry name is " + fileSystem.root.name + "</p>");
+    logit( "Got the file system: " + fileSystem.name + "<br/>" + "root entry name is " + fileSystem.root.name);
 
     doDirectoryListing();
 } 
