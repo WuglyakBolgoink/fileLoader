@@ -3,5 +3,4 @@
 *.pbxuser
 .DS_Store
 build
-www/phonegap.js
 www/.idea
