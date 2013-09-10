@@ -30,6 +30,8 @@
     </array>
     <key>CFBundleDevelopmentRegion</key>
     <string>English</string>
+    <key>UIApplicationExitsOnSuspend</key>
+    <true/>
     <key>CFBundleDisplayName</key>
     <string>${PRODUCT_NAME}</string>
     <key>CFBundleExecutable</key>

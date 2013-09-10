@@ -10,7 +10,6 @@
             {"page":"upload","folder":"templates","file":"page_upload.html","version":"0.1"},
             {"page":"newdoc","folder":"templates","file":"page_newdoc.html","version":"0.1"},
             {"page":"oflow","folder":"templates","file":"page_oflow.html","version":"0.1"}
-        ],
-        "url": "http://ae.subsession.net/projects/nDC/CORE"
+        ]
     }
 }

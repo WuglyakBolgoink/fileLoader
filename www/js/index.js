@@ -1,6 +1,9 @@
 var fileSystem,
     coreDefault,
-    coreServer;
+    coreServer,
+    appStorage = window.localStorage,
+    nDCcoreFile;
+
 
 //TODO: error message test
 var fileError = ['NOT_FOUND_ERR', 'SECURITY_ERR', 'ABORT_ERR', 'NOT_READABLE_ERR', 'ENCODING_ERR', 'NO_MODIFICATION_ALLOWED_ERR', 'INVALID_STATE_ERR', 'SYNTAX_ERR',
@@ -19,12 +22,12 @@ function logit(str) {
 //generic error handler
 function onError(e) {
     alert("Error");
-    console.log(e);
+    console.log(JSON.stringify(e));
 }
 //generic error handler
 function onErrorDelete(e) {
     alert("Error");
-    console.log(e);
+    console.log(JSON.stringify(e));
     console.log(fileError[e.code - 1]);
 }
 // ------------------------------------------------------------------------------------------------------------------------
@@ -158,6 +161,13 @@ function onDeviceReady() {
 }
 function onLoad() {
     document.addEventListener('deviceready', onDeviceReady, false);
+    // falls wir schon ein Update gemacht haben, lesen wir neuen Pfad für template Ordner aus LocalStorage
+    var cfile = appStorage.getItem('nDC_core_file');
+    if (cfile) {
+        nDCcoreFile = cfile;
+    } else {
+        nDCcoreFile = "./js/defaultCore.json";
+    }
 }
 // ------------------------------------------------------------------------------------------------------------------------
 function getJSON(url) {
@@ -184,19 +194,22 @@ function getJSON(url) {
 }
 
 $(document).on("click", "#loadJSON_default", function() {
-    coreDefault = getJSON('./js/defaultCore.json');
-//    console.log(coreDefault);
+    console.log("versuche öffnen:", nDCcoreFile);
+    if (nDCcoreFile) {
+        coreDefault = getJSON(nDCcoreFile);
+    } else {
+        alert('can not load default template');
+    }
+    console.log('coreDefault loaded');
 });
 
 $(document).on("click", "#loadJSON_server", function() {
     coreServer = getJSON('http://ae.subsession.net/projects/nDC/lng.json');
-//    console.log(coreServer);
+    console.log('coreServer loaded');
 });
 
 
 function onErrorSAVE2FS(e) {
-    alert("error save2fs: " + fileError[e.code - 1]);
-//    console.log(e);
     console.log('>>> Error:', fileError[e.code - 1]);
 }
 function getTemplate(url) {
@@ -223,9 +236,16 @@ function getTemplate(url) {
 
     return res;
 }
-function save2FS(file, dir, url) {
+/**
+ *
+ * @param file
+ * @param dir
+ * @param url
+ * @returns {boolean}
+ */
+function save2FS(file, url) {
     var status = true;
-    fileSystem.root.getFile(dir + '/' + file, {create: true}, function(f) {
+    fileSystem.root.getFile(file, {create: true}, function(f) {
         var str = "";
         str = getTemplate(url);
         if (str == "BAD") {
@@ -244,6 +264,18 @@ function save2FS(file, dir, url) {
     return status;
 }
 
+function saveJSON(fileIn, jsonIn) {
+    var status = true;
+    fileSystem.root.getFile(fileIn, {create: true}, function(f) {
+        f.createWriter(function(writerOb) {
+            writerOb.onwrite = function() {
+                console.log(">>> Done writing to file: ", fileIn);
+            };
+            writerOb.write(JSON.stringify(jsonIn));
+        });
+    }, onErrorSAVE2FS);
+    return status;
+}
 $(document).on("click", "#compareJSON", function() {
     console.log('================================================');
     console.log('== compare jSON:');
@@ -253,12 +285,12 @@ $(document).on("click", "#compareJSON", function() {
         console.log('================================================');
         return false;
     }
-    console.log('== default');
-    console.log(coreDefault);
-    console.log('================================================');
-    console.log('== from server');
-    console.log(coreServer);
-    console.log('================================================');
+//    console.log('== default');
+//    console.log(coreDefault);
+//    console.log('================================================');
+//    console.log('== from server');
+//    console.log(coreServer);
+//    console.log('================================================');
     var i = 0,
         j1 = coreDefault.pages,
         j2 = coreServer.pages,
@@ -276,12 +308,27 @@ $(document).on("click", "#compareJSON", function() {
             file = j2[i].file;
 
             //save "file" on FileSystem into Directory "dir" from "URL"
-            res = save2FS(file, dir, url);
+            //TODO: prüfen ob DIR existiert; falls nein dann erstellen wir die
+//            res = save2FS(dir + '/' + file, url);
+            res = save2FS(file, url);
             if (res) {
                 console.log("successfull saved file:", file, "into", dir, "from", url);
+                //TODO: test
+                j1[i].version = j2[i].version;
+
+                res = saveJSON('appCore.json', coreDefault);
+                if (res) {
+                    console.log("successfull saved file into:");
+                    var path = fileSystem.root.fullPath + '/' + 'appCore.json';
+                    console.log(path);
+                    appStorage.setItem('nDC_core_file', path);
+                }
             }
         }
-    }
+    }//#for
+
+//    console.log(coreDefault);
+//    console.log(coreServer);
 
     console.log('================================================');
 });
