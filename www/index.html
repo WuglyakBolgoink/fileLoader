@@ -37,22 +37,27 @@
         </style>
     </head>
     <body onload="onLoad();">
-        <button id="addFileButton">Create/Append to Test File</button>
-        <button id="readFileButton">Read Test File</button>
-        <button id="deleteFileButton">Delete Test File</button>
-        <button id="dirListingButton">Show Directory Contents</button>
-        <br /><br /><br />
         <button id="loadJSON_default">loadJSON_default</button>
         <button id="loadJSON_server">loadJSON_server</button>
         <button id="compareJSON">compareJSON</button>
         <button id="loadTemplate">load template</button>
         <br /><br />
         <button id="clearStorage">clear Storage</button>
-        <br /><br /><br />
+        <br /><br />
+        <button id="readFileButton">Read Test File</button>
+        <button id="deleteFileButton">Delete Test File</button>
+        <button id="dirListingButton">Show Directory Contents</button>
+        <br /><br />
+
         <div id="content"></div>
 
         <script type="text/javascript" src="phonegap.js"></script>
         <script type="text/javascript" src="js/jquery.js"></script>
+
+        <script type="text/javascript" src="js/underscore.js"></script>
+        <script type="text/javascript" src="js/json2.js"></script>
+        <script type="text/javascript" src="js/backbone.js"></script>
+
         <script type="text/javascript" src="js/index.js"></script>
 
     </body>

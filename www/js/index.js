@@ -1,16 +1,94 @@
+//-----------------
 var fileSystem, // file system on Phone
     coreDefault, // content of default JSON core
     coreServer, // content of server JSON core
     appStorage = window.localStorage,
-    nDCcoreFile, // URL for local core file on FileSystem or in www-folder
+//    nDCcoreFile, // URL for local core file on FileSystem or in www-folder
 //    appName = "FileLoader.app", // application name
 //    default_nDC_coreJSON_FilePath = "file://" + fileSystem.root.fullPath + "../www/js/defaultCore.json"; // default path to defaultCore.json in www-folder on Phone
-    default_nDC_coreJSON_FilePath = "js/defaultCore.json"; // default path to defaultCore.json in www-folder on Phone
+    DEFAULT_CORE_PATH = "js/defaultCore.json"; // default path to defaultCore.json in www-folder on Phone
+
+//-----------------
+var AppCore = {
+    core: DEFAULT_CORE_PATH // URL for local core file on FileSystem or in www-folder
+};
+
+var CorePages = Backbone.Model.extend({
+    defaults: {
+        "page":     "",
+        "folder":   "",
+        "file":     "",
+        "version":  "",
+        "path":     ""
+    }
+});
+
+
+var CorePagesList = Backbone.Collection.extend({
+    link: "",
+    model: CorePages,
+    compare: function(otherCollection) {
+        console.log(":::compare:::");
+        console.log(otherCollection);
+    },
+    getPage: function(name) {
+        var item = this.findWhere({"page": name});
+        if (item) {
+            return item;
+        }
+    },
+    getTemplate: function(name) {
+        var item = this.getPage(name).toJSON(),
+            url = "";
+
+        if (item) {
+            if (item.path) {
+                return xxLoadTemplate(item.path);
+            }
+        } else {
+            return 'BAD';
+        }
+    },
+    changeValue: function(pageName, itemValue, itemKey) {
+        this.getPage(pageName).set(itemKey, itemValue);
+    },
+    compareCore: function(other) {
+        var input = this.toJSON(),
+            output = other.toJSON(),
+            i,
+            file = "",
+            url = "",
+            path = "",
+            isSave = "";
+
+        for (i = 0; i < input.length; i++) {
+            if (input[i].page == output[i].page && parseFloat(input[i].version) < parseFloat(output[i].version)) {
+                file = output[i].file;
+                url  = other.link + "/" + output[i].folder + "/" + file;
+                path = "file://" + fileSystem.root.fullPath + "/" + file;
+
+                isSave = xxSave2FS(this, output[i].version, input[i].page, file, url, path);
+
+            }
+        }//for
+
+    }//compareCore
+});
+
+
+
+
+var cDefault = new CorePagesList(),
+    cServer = new CorePagesList();
 
 
 // fileError message
 var fileError = ['NOT_FOUND_ERR', 'SECURITY_ERR', 'ABORT_ERR', 'NOT_READABLE_ERR', 'ENCODING_ERR', 'NO_MODIFICATION_ALLOWED_ERR', 'INVALID_STATE_ERR', 'SYNTAX_ERR',
     'INVALID_MODIFICATION_ERR', 'QUOTA_EXCEEDED_ERR', 'TYPE_MISMATCH_ERR', 'PATH_EXISTS_ERR'];
+
+
+
+
 
 // return html-element with id == "id"
 function getById(id) {
@@ -34,16 +112,27 @@ function fileErrorMSG(e) {
  * save path to coreJSON in LocalStorage and update this on App
  * @param path - URL local on App
  */
-function savePathToStorage(path) {
+function saveCorePathToStorage(path) {
     appStorage.setItem('nDC_core_file', path);
-    nDCcoreFile = path;
+    AppCore.core = path;
+    loadDefaultCore(path); // reload Core
 }
 // ------------------------------------------------------------------------------------------------------------------------
 // fuctions
 // ------------------------------------------------------------------------------------------------------------------------
+
+/**
+ * ersetzt defaultCore-file mit default Wert
+ * und lädt diese Datei
+ */
+function clearStorage() {
+    saveCorePathToStorage(DEFAULT_CORE_PATH);
+    console.log(">>> loaded default storage...");
+}
+
 function readFile(f) {
     f.file(function(e) {
-        console.log('==> called the file func on the file ob');
+        console.log('==> called the file fuqnc on the file ob');
 
         var reader = new FileReader();
         reader.onerror = function(evt) {
@@ -57,19 +146,6 @@ function readFile(f) {
         };//onLoadEnd
         reader.readAsText(e);
     });//fileObj.file()
-}
-
-function appendFile(f) {
-    var str = "";
-    str = "Test at " + new Date().toString() + "\n";
-    f.createWriter(function(writerOb) {
-        writerOb.onwrite = function() {
-            logit("Done writing to file: " + str);
-        };
-        //go to the end of the file...
-        writerOb.seek(writerOb.length);
-        writerOb.write(str);
-    });
 }
 
 function gotFiles(entries) {
@@ -99,10 +175,7 @@ function doDirectoryListing() {
     dirReader.readEntries(gotFiles, fileErrorMSG);
 }
 
-function doAppendFile() {
-    getById("#content").innerHTML = "";
-    fileSystem.root.getFile("test.txt", {create: true}, appendFile, fileErrorMSG);
-}
+
 
 function doReadFile() {
     getById("#content").innerHTML = "";
@@ -122,7 +195,6 @@ function onFSSuccess(fs) {
     fileSystem = fs;
 
     getById("#dirListingButton").addEventListener("touchstart", doDirectoryListing);
-    getById("#addFileButton").addEventListener("touchstart", doAppendFile);
     getById("#readFileButton").addEventListener("touchstart", doReadFile);
     getById("#deleteFileButton").addEventListener("touchstart", doDeleteFile);
 
@@ -132,69 +204,182 @@ function onFSSuccess(fs) {
 }
 // ------------------------------------------------------------------------------------------------------------------------
 function onDeviceReady() {
-    console.log("==> DEVICE READY");
+    console.log(">>> DEVICE READY");
     //request the persistent file system
     window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFSSuccess, fileErrorMSG);
+
+
+
+    // falls wir schon ein Update gemacht haben, lesen wir neuen Pfad für Core.json aus LocalStorage
+    console.log(">>> old default Core: " + AppCore.core);
+    var cfile = appStorage.getItem('nDC_core_file');
+    if (cfile) {
+        AppCore.core = cfile;
+    } else {
+        AppCore.core = DEFAULT_CORE_PATH;
+    }
+    console.log(">>> new default Core: " + AppCore.core);
+
+
+    xxLoadDefaultCore(AppCore.core);
+
+    //TODO: remove
+    loadServerCore('http://ae.subsession.net/projects/nDC/lng.json');
+
+//    console.log(cDefault);
+//    console.log(cDefault.getPage("main"));
+//    console.log(cDefault.getTemplate("login"));
+//    cDefault.changeVersion("login", "100");
+
+
+
+    cDefault.compareCore(cServer);
+
+
+
+//    console.log(">>>>>>>>>>>>>>>>>>>>>>");
+//    var d = new CorePagesList();
+//    var n = new CorePagesList();
+//    d.add({page:"page0",path:"path0",file:"file0"});
+//    n.add({page:"page1",path:"path1",file:"file1"},{page:"page2",path:"path2",file:"file2"},{page:"page3",path:"path3",file:"file3"});
+//    console.log(d);
+//    console.log(n);
+//    d.compare(n);
+//    console.log(">>>>>>>>>>>>>>>>>>>>>>");
 }
 
 function onLoad() {
-    appStorage.clear();
     document.addEventListener('deviceready', onDeviceReady, false);
-    // falls wir schon ein Update gemacht haben, lesen wir neuen Pfad für template Ordner aus LocalStorage
-    var cfile = appStorage.getItem('nDC_core_file');
-    if (cfile) {
-        nDCcoreFile = cfile;
-    } else {
-        nDCcoreFile = default_nDC_coreJSON_FilePath;
-    }
-    loadDefaultCore(nDCcoreFile);
 }
 // ------------------------------------------------------------------------------------------------------------------------
-// implement JSON.stringify serialization
-JSON.stringify = JSON.stringify || function (obj) {
-    var t = typeof (obj);
-    if (t != "object" || obj === null) {
-        // simple data type
-        if (t == "string") {
-            obj = '"' + obj + '"';
-        }
-        return String(obj);
-    } else {
-        // recurse array or object
-        var n, v, json = [], arr = (obj && obj.constructor == Array);
-        for (n in obj) {
-            v = obj[n];
-            t = typeof (v);
-            if (t == "string") {
-                v = '"' + v + '"';
-            }
-            else if (t == "object" && v !== null) {
-                v = JSON.stringify(v);
-            }
-            json.push((arr ? "" : '"' + n + '":') + String(v));
-        }
-        return (arr ? "[" : "{") + String(json) + (arr ? "]" : "}");
-    }
-};
-
-
 /**
- * open File and return it content, if error function return string "BAD"
+ * open synchron File and return it content,
+ * if it doesn't work function return String "BAD"
  *
- * @param url - local/external
+ * @param url - string local/external
  * @param contentType - text/json/html/jsonp
- * @returns {string} - content
+ * @returns {string} - file content
  */
-function openFile(url, contentType) {
-    echo("open url: " + url);
-    var res = "";
+function xxOpenFile(url, contentType) {
+    var res = "BAD";
     $.ajax({
         async: false,
         url: url,
         type: "GET",
         dataType: contentType,
+        error: function() {
+            res = "BAD";
+        },
+        success: function(result) {
+            res = result;
+        }
+    });//ajax
+    return res;
+}
+
+/**
+ * load defaultCore from URL,
+ * if can not load from URL, load from defaultCore
+ *
+ * @param url - string
+ */
+function xxLoadDefaultCore(url) {
+
+    var tmp = xxOpenFile(url, "json");
+    if (tmp != "BAD") {
+        if (tmp) {
+            cDefault.add(tmp);
+        }
+        coreDefault = tmp;
+    } else {
+        xxLoadDefaultCore(DEFAULT_CORE_PATH);
+    }
+}
+
+function loadServerCore(url) {
+    var tmp = xxOpenFile(url, "json");
+    if (tmp != "BAD") {
+        if (tmp.nDC_CORE) {
+            cServer.add(tmp.nDC_CORE.pages);
+            cServer.link = tmp.nDC_CORE.url;
+        }
+        coreServer = tmp;
+    } else {
+        alert('can not load default template');
+    }
+}
+
+
+/**
+ * Save actual core into App root-folder in file appCore.json.
+ *
+ * @param thisObj - CorePagesList Object
+ * @param newVersion - float
+ * @param pageName - string
+ * @param file - string
+ * @param url - string
+ * @param path - string
+ * @returns {string} {OK/BAD}
+ */
+function xxSave2FS(thisObj, newVersion, pageName, file, url, path) {
+    var out = "BAD",
+        str = xxOpenFile(url, "text");
+
+    if (str != "BAD") {
+
+        fileSystem.root.getFile(file, {create: true}, function(f) {
+
+            thisObj.changeValue(pageName, newVersion, "version");
+            thisObj.changeValue(pageName, path, "path");
+
+            f.createWriter(function(writerOb) {
+                writerOb.onwriteend = function() {
+                    xxSaveJSON("appCore.json", cDefault);
+                };
+                writerOb.write(str);
+            });
+        }, fileErrorMSG);
+
+        out = "OK";
+    }
+
+    return out;
+}
+
+function xxSaveJSON(fileIn, jsonIn) {
+    fileSystem.root.getFile(fileIn, {create: true}, function(f) {
+        f.createWriter(function(writerObj) {
+            writerObj.onwrite = function() {
+                var lPath = "file://" + fileSystem.root.fullPath + "/appCore.json";
+                saveCorePathToStorage(lPath);
+            };
+            writerObj.write(JSON.stringify(jsonIn));
+        });
+    }, fileErrorMSG);
+}
+
+
+
+
+
+
+
+
+
+$(document).on("click", "#clearStorage", function() {
+    clearStorage();
+});
+
+
+function xxLoadTemplate(url) {
+    var res = "BAD";
+    $.ajax({
+        async: false,
+        url: url,
+        type: "GET",
+        dataType: "text",
         error: function (e) {
-            res = "BAD" + JSON.stringify(e);
+            res = "BAD";
         },
         success: function (result) {
             res = result;
@@ -203,134 +388,4 @@ function openFile(url, contentType) {
     return res;
 }
 
-function loadDefaultCore(url) {
-    var tmp = openFile(url, "json");
-    if (tmp != "BAD") {
-//        readlocalFile(url);
-        coreDefault = tmp;
-    } else {
-        alert('can not load default template');
-    }
-}
 
-function loadServerCore(url) {
-    var tmp = openFile(url, "json");
-    if (tmp != "BAD") {
-        coreServer = tmp;
-    } else {
-        alert('can not load default template');
-    }
-}
-
-/**
- *
- * @param file - filename
- * @param url - urlname
- * @param index - index of item
- * @param newVersion - new version nummer
- * @param path - path to template
- */
-function save2FS(file, url, index, newVersion, path) {
-    fileSystem.root.getFile(file, {create: true}, function(f) {
-        var str = openFile(url, "text");
-        if (str != "BAD") {
-
-            coreDefault.nDC_CORE.pages[index].version = newVersion;
-            coreDefault.nDC_CORE.pages[index].path = path;
-
-            f.createWriter(function(writerOb) {
-                writerOb.onwriteend = function() {
-                    saveJSON("appCore.json", coreDefault);
-                };
-                writerOb.write(str);
-            });
-        } // #if
-    }, fileErrorMSG);
-}
-
-function saveJSON(fileIn, jsonIn) {
-    fileSystem.root.getFile(fileIn, {create: true}, function(f) {
-        f.createWriter(function(writerOb) {
-            writerOb.onwrite = function() {
-                var lPath = "file://" + fileSystem.root.fullPath + "/appCore.json";
-                savePathToStorage(lPath);
-            };
-            writerOb.write(JSON.stringify(jsonIn));
-        });
-    }, fileErrorMSG);
-}
-
-
-/**
- *  compare default Core with server Core,
- *  if server page not equals to app-page, dowload this page from server with URL-link in serverCore.json
- *
- * @param ndcURL - json url
- */
-function compareCore(ndcURL) {
-    loadDefaultCore(nDCcoreFile);
-    loadServerCore(ndcURL);
-
-    if (!coreServer || !coreDefault) {
-        return false;
-    }
-
-    var i = 0,
-        j1 = coreDefault.nDC_CORE.pages,
-        j2 = coreServer.nDC_CORE.pages,
-        url = "",
-        file = "",
-        dir = "",
-        path = "";
-
-    for (i in j1) {
-        if (j1[i].page == j2[i].page && parseFloat(j1[i].version) < parseFloat(j2[i].version)) {
-            dir = j2[i].folder;
-            file = j2[i].file;
-            url = coreServer.nDC_CORE.url + "/" + dir + "/" + file;
-            path = "file://" + fileSystem.root.fullPath + "/" + file;
-            //save "file" on FileSystem into root-Directory from "URL"
-            save2FS(file, url, i, j2[i].version, path);
-        } //#if/page
-    } //#for/in
-}
-
-
-
-$(document).on("click", "#loadJSON_default", function() {
-//    var tmp = openFile("file://" + fileSystem.root.fullPath + "/" + "page_search.html", "text");
-//    var tmp = openFile("http://ae.subsession.net/projects/nDC/lng.json", "json");
-//    echo(tmp);
-    loadDefaultCore(nDCcoreFile);
-    echo(coreDefault);
-});
-
-$(document).on("click", "#loadJSON_server", function() {
-    loadServerCore('http://ae.subsession.net/projects/nDC/lng.json');
-    logit(coreServer);
-});
-
-$(document).on("click", "#clearStorage", function() {
-    savePathToStorage(default_nDC_coreJSON_FilePath);
-    console.log(">>> storage wurde entleert...");
-});
-
-function ttt(url) {
-    var s =  openFile(url, "text");
-    return s;
-}
-
-$(document).on("click", "#loadTemplate", function() {
-    echo("click loadTemplate:");
-    var url = coreDefault.nDC_CORE.pages[1].path + "/" + coreDefault.nDC_CORE.pages[1].file;
-    var t = ttt(url);
-    echo(url);
-    echo(t);
-    logit(t);
-});
-
-
-
-$(document).on("click", "#compareJSON", function() {
-    compareCore('http://ae.subsession.net/projects/nDC/lng.json');
-}); // $(document).on("click", "#compareJSON"
