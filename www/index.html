@@ -24,23 +24,26 @@
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
         <link rel="stylesheet" type="text/css" href="css/index.css" />
         <title>Hello World</title>
-		<style>
+        <style>
 button { width: 100%; padding: 5px; }
 </style>
     </head>
-    <body onLoad="onLoad()">
+    <body onload="onLoad();">
         <button id="addFileButton">Create/Append to Test File</button>
-		<button id="readFileButton">Read Test File</button>
-		<button id="metadataFileButton">Get Test File Metadata</button>
-		<button id="deleteFileButton">Delete Test File</button>
-		<button id="dirListingButton">Show Directory Contents</button>
+        <button id="readFileButton">Read Test File</button>
+        <button id="metadataFileButton">Get Test File Metadata</button>
+        <button id="deleteFileButton">Delete Test File</button>
+        <button id="dirListingButton">Show Directory Contents</button>
+        <br />
+        <button id="loadJSON_default">loadJSON_default</button>
+        <button id="loadJSON_server">loadJSON_server</button>
+        <button id="compareJSON">compareJSON</button>
 
-		<div id="content"></div>
-
-		<div id="log"></div>
-
+        <div id="content"></div>
+        <div id="log"></div>
 
         <script type="text/javascript" src="phonegap.js"></script>
+        <script type="text/javascript" src="js/jquery.js"></script>
         <script type="text/javascript" src="js/index.js"></script>
 
     </body>

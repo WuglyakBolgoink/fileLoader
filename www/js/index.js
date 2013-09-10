@@ -1,4 +1,10 @@
-var fileSystem;
+var fileSystem,
+    coreDefault,
+    coreServer;
+
+//TODO: error message test
+var fileError = ['NOT_FOUND_ERR', 'SECURITY_ERR', 'ABORT_ERR', 'NOT_READABLE_ERR', 'ENCODING_ERR', 'NO_MODIFICATION_ALLOWED_ERR', 'INVALID_STATE_ERR', 'SYNTAX_ERR',
+    'INVALID_MODIFICATION_ERR', 'QUOTA_EXCEEDED_ERR', 'TYPE_MISMATCH_ERR', 'PATH_EXISTS_ERR'];
 
 //generic getById
 function getById(id) {
@@ -14,6 +20,12 @@ function logit(str) {
 function onError(e) {
     alert("Error");
     console.log(e);
+}
+//generic error handler
+function onErrorDelete(e) {
+    alert("Error");
+    console.log(e);
+    console.log(fileError[e.code - 1]);
 }
 // ------------------------------------------------------------------------------------------------------------------------
 // fuctions
@@ -69,6 +81,7 @@ function appendFile(f) {
 function gotFiles(entries) {
     getById("#log").innerHTML = "";
     logit("===== File's: ===");
+    console.log("===== File's: ===");
 
     var s = "",
         i,
@@ -83,8 +96,10 @@ function gotFiles(entries) {
             s = "[D] " + s;
         }
         logit(s);
+        console.log(s);
     }
     logit("=================");
+    console.log("=================");
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -119,7 +134,7 @@ function doDeleteFile() {
         f.remove(function() {
             console.log("==> File removed");
         });
-    }, onError);
+    }, onErrorDelete);
 }
 // ------------------------------------------------------------------------------------------------------------------------
 function onFSSuccess(fs) {
@@ -145,11 +160,131 @@ function onLoad() {
     document.addEventListener('deviceready', onDeviceReady, false);
 }
 // ------------------------------------------------------------------------------------------------------------------------
+function getJSON(url) {
+    var res;
+    $.ajax({
+        async: false,
+        url: url,
+        type: "GET",
+        dataType: 'json',
+        error: function (err) {
+            alert("coreERROR: network error!");
+            console.log(err);
+        },
+        success: function (result) {
+            if (result.nDC_CORE) {
+                res = result.nDC_CORE;
+            } else {
+                alert("coreERROR: nDC_CORE not found!");
+            }
+        }
+    });//ajax
+
+    return res;
+}
+
+$(document).on("click", "#loadJSON_default", function() {
+    coreDefault = getJSON('./js/defaultCore.json');
+//    console.log(coreDefault);
+});
+
+$(document).on("click", "#loadJSON_server", function() {
+    coreServer = getJSON('http://ae.subsession.net/projects/nDC/lng.json');
+//    console.log(coreServer);
+});
 
 
+function onErrorSAVE2FS(e) {
+    alert("error save2fs: " + fileError[e.code - 1]);
+//    console.log(e);
+    console.log('>>> Error:', fileError[e.code - 1]);
+}
+function getTemplate(url) {
+    var res;
+    $.ajax({
+        async: false,
+        url: url,
+        type: "GET",
+        dataType: 'html',
+        error: function (err) {
+            console.log("templateERROR: network error!");
+            console.log(err);
+            res = 'BAD';
+        },
+        success: function (result) {
+            if (result) {
+                res = result;
+            } else {
+                console.log("templateERROR: file not found!");
+                res = 'BAD';
+            }
+        }
+    });//ajax
 
+    return res;
+}
+function save2FS(file, dir, url) {
+    var status = true;
+    fileSystem.root.getFile(dir + '/' + file, {create: true}, function(f) {
+        var str = "";
+        str = getTemplate(url);
+        if (str == "BAD") {
+            return false;
+        }
+        f.createWriter(function(writerOb) {
+            writerOb.onwrite = function() {
+//                console.log("Done writing to file: ", str);
+                console.log(">>> Done writing to file: ", file);
+            };
+//        go to the end of the file...
+//        writerOb.seek(writerOb.length);
+            writerOb.write(str);
+        });
+    }, onErrorSAVE2FS);
+    return status;
+}
 
+$(document).on("click", "#compareJSON", function() {
+    console.log('================================================');
+    console.log('== compare jSON:');
+    console.log('================================================');
+    if (!coreServer || !coreDefault) {
+        console.log("== nothing to compare");
+        console.log('================================================');
+        return false;
+    }
+    console.log('== default');
+    console.log(coreDefault);
+    console.log('================================================');
+    console.log('== from server');
+    console.log(coreServer);
+    console.log('================================================');
+    var i = 0,
+        j1 = coreDefault.pages,
+        j2 = coreServer.pages,
+        url = "",
+        file = "",
+        dir = "",
+        res;
 
+    for (i in j1) {
+        if (j1[i].page == j2[i].page && parseFloat(j1[i].version) < parseFloat(j2[i].version)) {
+            console.log(">>> Item", j1[i].page, "with version ", j1[i].version, "has new version", j2[i].version);
+
+            url = coreServer.url + "/" + j2[i].folder + "/" + j2[i].file;
+            dir = j2[i].folder;
+            file = j2[i].file;
+
+            //save "file" on FileSystem into Directory "dir" from "URL"
+            res = save2FS(file, dir, url);
+            if (res) {
+                console.log("successfull saved file:", file, "into", dir, "from", url);
+            }
+        }
+    }
+
+    console.log('================================================');
+});
 
 
 
