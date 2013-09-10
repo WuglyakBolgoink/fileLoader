@@ -51,15 +51,38 @@ function doMetadataFile(e) {
 }
 
 function readFile(f) {
-	getById("#log").innerHTML = "";
-    reader = new FileReader();
-    reader.onloadend = function(e) {
-        logit("go to end");
-		logit(e)
-        logit(e.target.result);
-    }
-    reader.readAsText(f);
-	logit(reader);
+	var fileObj = f;
+
+	fileObj.file(function(e) {
+		console.log("<<<called the file func on the file ob");
+
+		reader = new FileReader();
+		/* prepare read listeners */
+        reader.onloadstart = function(evt) {
+            console.log(">>>started reading");
+        };//onLoadStart
+        reader.onabort = function(evt) {
+            console.log(">>>aborted read text");
+            console.log(evt.target.result);
+        };//onAbort
+        reader.onerror = function(evt) {
+            console.log(">>>Error read text");
+            console.log(">>>Error"+evt.error.code);
+        };//onError
+		reader.onloadend = function(evt) {
+			console.log(">>>evt:");
+			console.log(evt);
+				var targetRes = evt.target.result;
+			console.log(">>>targetRes:");
+			console.log(targetRes);
+			console.log(">>>readerRes:");
+			console.log(reader.result);
+
+				getById("#log").innerHTML += fileContent;
+			console.log(">>>finish read");
+		};//onLoadEnd
+		reader.readAsText(e);
+	});//fileObj.file()
 }
 
 function doReadFile(e) {
