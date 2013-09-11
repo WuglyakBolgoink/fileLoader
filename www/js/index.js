@@ -2,7 +2,9 @@ var fileSystem,
     coreDefault,
     coreServer,
     appStorage = window.localStorage,
-    nDCcoreFile;
+    nDCcoreFile,
+    appName = "FileLoader.app",
+    default_nDC_coreJSON_FilePath = "../" + appName + "/www/js/defaultCore.json";
 
 
 //TODO: error message test
@@ -23,6 +25,7 @@ function logit(str) {
 function onError(e) {
     alert("Error");
     console.log(JSON.stringify(e));
+    console.log(fileError[e.code - 1]);
 }
 //generic error handler
 function onErrorDelete(e) {
@@ -32,6 +35,45 @@ function onErrorDelete(e) {
 }
 // ------------------------------------------------------------------------------------------------------------------------
 // fuctions
+// ------------------------------------------------------------------------------------------------------------------------
+function readAsText(file) {
+    var res = "",
+        reader = new FileReader();
+
+    reader.onloadend = function(evt) {
+        console.log(evt.target.result);
+        res =  evt.target.result;
+    };
+    reader.readAsText(file);
+
+    console.log('rat:');
+
+    return res;
+}
+
+function readlocalFile(fileName) {
+    var res = "";
+    console.log('search file to open:', fileName);
+    fileSystem.root.getFile(fileName, {create: false, exclusive: false}, function(f) {
+
+        f.file(function(e) {
+//            res = $.parseJSON(readAsText(e));
+
+            var reader = new FileReader();
+            reader.onloadend = function(evt) {
+                var targetRes = evt.target.result;
+                res = targetRes;
+            };//onLoadEnd
+            reader.readAsText(e);
+        });//f.file()
+
+    }, onError);
+
+    console.log("res return:");
+    console.log(res);
+    return res;
+}
+
 // ------------------------------------------------------------------------------------------------------------------------
 function metadataFile(m) {
     logit("==> File was last modified " + m.modificationTime);
@@ -166,7 +208,7 @@ function onLoad() {
     if (cfile) {
         nDCcoreFile = cfile;
     } else {
-        nDCcoreFile = "./js/defaultCore.json";
+        nDCcoreFile = default_nDC_coreJSON_FilePath;
     }
 }
 // ------------------------------------------------------------------------------------------------------------------------
@@ -196,7 +238,9 @@ function getJSON(url) {
 $(document).on("click", "#loadJSON_default", function() {
     console.log("versuche öffnen:", nDCcoreFile);
     if (nDCcoreFile) {
-        coreDefault = getJSON(nDCcoreFile);
+//        coreDefault = getJSON(nDCcoreFile);
+        //TODO: test
+        coreDefault = readlocalFile(nDCcoreFile);
     } else {
         alert('can not load default template');
     }
@@ -276,6 +320,22 @@ function saveJSON(fileIn, jsonIn) {
     }, onErrorSAVE2FS);
     return status;
 }
+
+/**
+ * save path to coreJSON in LocalStorage and update this on App
+ * @param path - URL local on App
+ */
+function savePathToStorage(path) {
+    appStorage.setItem('nDC_core_file', path);
+    nDCcoreFile = path;
+}
+
+$(document).on("click", "#clearStorage", function() {
+    savePathToStorage(default_nDC_coreJSON_FilePath);
+    console.log(">>> storage wurde entleert...");
+});
+
+
 $(document).on("click", "#compareJSON", function() {
     console.log('================================================');
     console.log('== compare jSON:');
@@ -297,7 +357,8 @@ $(document).on("click", "#compareJSON", function() {
         url = "",
         file = "",
         dir = "",
-        res;
+        res,
+        path;
 
     for (i in j1) {
         if (j1[i].page == j2[i].page && parseFloat(j1[i].version) < parseFloat(j2[i].version)) {
@@ -319,9 +380,9 @@ $(document).on("click", "#compareJSON", function() {
                 res = saveJSON('appCore.json', coreDefault);
                 if (res) {
                     console.log("successfull saved file into:");
-                    var path = fileSystem.root.fullPath + '/' + 'appCore.json';
+                    path = "file://" + encodeURI(fileSystem.root.fullPath) + '/' + 'appCore.json';
                     console.log(path);
-                    appStorage.setItem('nDC_core_file', path);
+                    savePathToStorage(path);
                 }
             }
         }
