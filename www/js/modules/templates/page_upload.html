@@ -1,0 +1,66 @@
+{{#if pages.ndcDOCSEND.LABEL_PAGE_TITLE}}
+    <div class="row-fluid" >
+        <div class="span12 ndcPageHeader">
+            <p><img src="img/nDCimages/ndcLogoHeader.png" alt="nDcLogo" /><span>{{pages.ndcDOCSEND.LABEL_PAGE_TITLE}}</span></p>
+        </div>
+    </div>
+{{/if}}
+
+    <div class="row-fluid">
+        <div class="span12 ndcPage">
+            <div class="controls controls-row form_rbt_header">
+                <label class="span6 radio">
+                    <i class="icon-camera icon-white"></i>
+                    <input type="radio" name="optionsRadios" id="optionsRadios1" value="option1">
+
+                    {{pages.ndcDOCSEND.LABEL_RBTN_CAM}}
+                    </label>
+                    <label class="span6 radio"><i class="icon-file icon-white"></i>
+                        <input type="radio" name="optionsRadios" id="optionsRadios2" value="option2">
+
+                    {{pages.ndcDOCSEND.LABEL_RBTN_FILE}}
+                        </label>
+                    </div>
+
+
+                    <fieldset style="margin-top:10px;">
+
+                        <label class="listDivider"><i class="icon-user icon-white"></i>{{pages.ndcDOCSEND.LABEL_COMBO}}</label>
+                        <select id="ds_client" class="span12"></select>
+                        <select id="ds_category" class="span12"></select>
+                        <select id="ds_type" class="span12"></select>
+
+
+                        <label class="listDivider">
+                            <i class="icon-time icon-white"></i>
+                        {{pages.ndcDOCSEND.LABEL_TIME}}
+                        </label>
+                        <div class="controls controls-row">
+                            <select class="span6" id="ds_month">{{#listMonth}}{{/listMonth}}</select>
+                            <select class="span6" id="ds_year">{{#listYears}}{{/listYears}}</select>
+                        </div>
+
+                        <label class="listDivider" for="ds_tags"><i class="icon-tags icon-white"></i>{{pages.ndcDOCSEND.LABEL_TAGS}}</label>
+                        <input class="span12" value="" type="text" name="ds_tags" id="ds_tags" placeholder="{{pages.ndcDOCSEND.LABEL_TAGS}}" />
+
+                        <label class="listDivider" for="ds_comment">
+                            <i class="icon-comment icon-white"></i>
+                        {{pages.ndcDOCSEND.LABEL_COMMENT}}
+                        </label>
+                        <textarea rows="3" class="span12" name="ds_comment" id="ds_comment" placeholder="{{pages.ndcDOCSEND.LABEL_COMMENT}}"></textarea>
+
+                        <div class="text-center">
+                            <a id="upBtnNext" href="#!/makecamActivity" class="span6 btn btn-primary btn-large">
+                            {{pages.ndcDOCSEND.BTN_NEXT}}
+                                <i class="icon-arrow-right icon-white" style="float:right;"></i>
+                            </a>
+                            <a href="#!/mainActivity" class="span6 btn btn-large">
+
+                            {{pages.ndcDOCSEND.BTN_CANCEL}}
+                                <i class="icon-remove" style="float:right;"></i>
+                            </a>
+                        </div>
+                    </fieldset>
+
+                </div>
+            </div>

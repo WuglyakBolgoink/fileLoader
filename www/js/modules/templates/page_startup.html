@@ -1,0 +1,39 @@
+{{#if pages.ndcSTARTUP.LABEL_PAGE_TITLE}}
+<div class="row-fluid" >
+    <div class="span12 ndcPageHeader">
+        <p><img src="img/nDCimages/ndcLogoHeader.png" alt="nDcLogo" /><span>{{pages.ndcSTARTUP.LABEL_PAGE_TITLE}}</span></p>
+    </div>
+</div>
+{{/if}}
+
+<div class="row-fluid">
+    <div class="span12 text-center" style="margin-top:150px;">
+        <img src="./img/nDCimages/ndc.png" />
+        <p>nVista nDC Mobile Version 0.4.0b</p>
+        <!-- Modal -->
+        <div style="margin-left:-130px;top:50%;width:250px !important;" id="myModal" class="modal hide fade" tabindex="-1" role="dialog" aria-hidden="true" data-keyboard="false" data-backdrop="true">
+            <div class="modal-header">
+                <i class="icon-info-sign"></i> {{pages.ndcSTARTUP.MSG_LOADING}}
+            </div>
+            <div class="modal-body">
+                <p><img src="./img/nDCimages/ajax.gif" style="float:left" /> <span>{{pages.ndcSTARTUP.MSG_LOADING_WAITING}}</span></p>
+            </div>
+            <div class="modal-footer">
+                <a href="#!/loginActivity" class="btn" aria-hidden="true">login</a>
+                <a href="#!/mainActivity" class="btn" >main</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="navbar navbar-fixed-bottom">
+    <div class="row-fluid">
+        <div class="span12 text-center">
+            <p>{{pages.ndcSTARTUP.LABEL_APP_STARTING}}</p>
+        </div>
+    </div>
+</div>
+
+
+
