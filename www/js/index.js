@@ -1,110 +1,49 @@
-var fileSystem,
-    coreDefault,
-    coreServer,
+var fileSystem, // file system on Phone
+    coreDefault, // content of default JSON core
+    coreServer, // content of server JSON core
     appStorage = window.localStorage,
-    nDCcoreFile,
-    appName = "FileLoader.app",
-    default_nDC_coreJSON_FilePath = "../" + appName + "/www/js/defaultCore.json";
+    nDCcoreFile, // URL for local core file on FileSystem or in www-folder
+//    appName = "FileLoader.app", // application name
+    default_nDC_coreJSON_FilePath = "file://" + fileSystem.root.fullPath + "../www/js/defaultCore.json"; // default path to defaultCore.json in www-folder on Phone
 
 
-//TODO: error message test
+// fileError message
 var fileError = ['NOT_FOUND_ERR', 'SECURITY_ERR', 'ABORT_ERR', 'NOT_READABLE_ERR', 'ENCODING_ERR', 'NO_MODIFICATION_ALLOWED_ERR', 'INVALID_STATE_ERR', 'SYNTAX_ERR',
     'INVALID_MODIFICATION_ERR', 'QUOTA_EXCEEDED_ERR', 'TYPE_MISMATCH_ERR', 'PATH_EXISTS_ERR'];
 
-//generic getById
+// return html-element with id == "id"
 function getById(id) {
     return document.querySelector(id);
 }
 
-//generic content logger
+// content logger
 function logit(str) {
-    getById("#log").innerHTML += "<p>" + str + "</p>";
+    getById("#content").innerHTML += "<p>" + str + "</p>";
 }
 
-//generic error handler
-function onError(e) {
-    alert("Error");
-    console.log(JSON.stringify(e));
-    console.log(fileError[e.code - 1]);
+function echo(str) {
+    console.log(str);
 }
-//generic error handler
-function onErrorDelete(e) {
+function fileErrorMSG(e) {
     alert("Error");
-    console.log(JSON.stringify(e));
     console.log(fileError[e.code - 1]);
 }
 // ------------------------------------------------------------------------------------------------------------------------
 // fuctions
 // ------------------------------------------------------------------------------------------------------------------------
-function readAsText(file) {
-    var res = "",
-        reader = new FileReader();
-
-    reader.onloadend = function(evt) {
-        console.log(evt.target.result);
-        res =  evt.target.result;
-    };
-    reader.readAsText(file);
-
-    console.log('rat:');
-
-    return res;
-}
-
-function readlocalFile(fileName) {
-    var res = "";
-    console.log('search file to open:', fileName);
-    fileSystem.root.getFile(fileName, {create: false, exclusive: false}, function(f) {
-
-        f.file(function(e) {
-//            res = $.parseJSON(readAsText(e));
-
-            var reader = new FileReader();
-            reader.onloadend = function(evt) {
-                var targetRes = evt.target.result;
-                res = targetRes;
-            };//onLoadEnd
-            reader.readAsText(e);
-        });//f.file()
-
-    }, onError);
-
-    console.log("res return:");
-    console.log(res);
-    return res;
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-function metadataFile(m) {
-    logit("==> File was last modified " + m.modificationTime);
-}
-
 function readFile(f) {
     f.file(function(e) {
         console.log('==> called the file func on the file ob');
 
         var reader = new FileReader();
-        /* prepare read listeners */
-        reader.onloadstart = function() {
-            console.log('==> started reading');
-        };//onLoadStart
-        reader.onabort = function(evt) {
-            console.log('==> aborted read text');
-            console.log(evt.target.result);
-        };//onAbort
         reader.onerror = function(evt) {
             console.log('==> Error read text');
             console.log('==> Error', evt.error.code);
         };//onError
         reader.onloadend = function(evt) {
-            console.log("==> evt:");
-            console.log(evt);
             var targetRes = evt.target.result;
             console.log("==> targetRes:");
             console.log(targetRes);
-            console.log("==> readerRes:");
-            console.log(reader.result);
-            console.log("==> finish read");
         };//onLoadEnd
         reader.readAsText(e);
     });//fileObj.file()
@@ -124,10 +63,7 @@ function appendFile(f) {
 }
 
 function gotFiles(entries) {
-    getById("#log").innerHTML = "";
-    logit("===== File's: ===");
-    console.log("===== File's: ===");
-
+    echo("===== File's: ===");
     var s = "",
         i,
         len;
@@ -140,11 +76,9 @@ function gotFiles(entries) {
         } else {
             s = "[D] " + s;
         }
-        logit(s);
-        console.log(s);
+        echo(s);
     }
-    logit("=================");
-    console.log("=================");
+    echo("=================");
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -152,25 +86,17 @@ function doDirectoryListing() {
     console.log("==> Funk :|: doDirectoryListing");
     //get a directory reader from our FS
     var dirReader = fileSystem.root.createReader();
-
-    dirReader.readEntries(gotFiles, onError);
+    dirReader.readEntries(gotFiles, fileErrorMSG);
 }
 
 function doAppendFile() {
-    getById("#log").innerHTML = "";
-    fileSystem.root.getFile("test.txt", {create: true}, appendFile, onError);
+    getById("#content").innerHTML = "";
+    fileSystem.root.getFile("test.txt", {create: true}, appendFile, fileErrorMSG);
 }
 
 function doReadFile() {
-    getById("#log").innerHTML = "";
-    fileSystem.root.getFile("test.txt", {create: true}, readFile, onError);
-}
-
-function doMetadataFile() {
-    getById("#log").innerHTML = "";
-    fileSystem.root.getFile("test.txt", {create: true}, function(f) {
-        f.getMetadata(metadataFile, onError);
-    }, onError);
+    getById("#content").innerHTML = "";
+    fileSystem.root.getFile("test.txt", {create: true}, readFile, fileErrorMSG);
 }
 
 function doDeleteFile() {
@@ -179,7 +105,7 @@ function doDeleteFile() {
         f.remove(function() {
             console.log("==> File removed");
         });
-    }, onErrorDelete);
+    }, fileErrorMSG);
 }
 // ------------------------------------------------------------------------------------------------------------------------
 function onFSSuccess(fs) {
@@ -188,7 +114,6 @@ function onFSSuccess(fs) {
     getById("#dirListingButton").addEventListener("touchstart", doDirectoryListing);
     getById("#addFileButton").addEventListener("touchstart", doAppendFile);
     getById("#readFileButton").addEventListener("touchstart", doReadFile);
-    getById("#metadataFileButton").addEventListener("touchstart", doMetadataFile);
     getById("#deleteFileButton").addEventListener("touchstart", doDeleteFile);
 
     console.log("==> Got the file system: ", fileSystem.name, " --- ", "root entry name is ", fileSystem.root.name);
@@ -199,9 +124,11 @@ function onFSSuccess(fs) {
 function onDeviceReady() {
     console.log("==> DEVICE READY");
     //request the persistent file system
-    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFSSuccess, onError);
+    window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, onFSSuccess, fileErrorMSG);
 }
+
 function onLoad() {
+    appStorage.clear();
     document.addEventListener('deviceready', onDeviceReady, false);
     // falls wir schon ein Update gemacht haben, lesen wir neuen Pfad für template Ordner aus LocalStorage
     var cfile = appStorage.getItem('nDC_core_file');
@@ -212,67 +139,77 @@ function onLoad() {
     }
 }
 // ------------------------------------------------------------------------------------------------------------------------
-function getJSON(url) {
-    var res;
+/**
+ * open File and return it content
+ *
+ * @param url - local/external
+ * @param contentType - text/json/html/jsonp
+ * @returns {string} - content
+ */
+function openFile(url, contentType) {
+    var res = "";
     $.ajax({
         async: false,
         url: url,
         type: "GET",
-        dataType: 'json',
+        dataType: contentType,
         error: function (err) {
             alert("coreERROR: network error!");
-            console.log(err);
+            echo(err);
         },
         success: function (result) {
-            if (result.nDC_CORE) {
-                res = result.nDC_CORE;
-            } else {
-                alert("coreERROR: nDC_CORE not found!");
-            }
+            res = result;
         }
     });//ajax
 
     return res;
 }
 
-$(document).on("click", "#loadJSON_default", function() {
-    console.log("versuche öffnen:", nDCcoreFile);
-    if (nDCcoreFile) {
-//        coreDefault = getJSON(nDCcoreFile);
-        //TODO: test
-        coreDefault = readlocalFile(nDCcoreFile);
+function loadDefaultCore(url) {
+    console.log("versuche öffnen:", url);
+    var tmp = openFile(url, "json");
+    if (tmp) {
+//        readlocalFile(url);
+        coreDefault = tmp;
     } else {
         alert('can not load default template');
     }
-    console.log('coreDefault loaded');
+}
+
+function loadServerCore(url) {
+    coreServer = openFile(url);
+}
+
+$(document).on("click", "#loadJSON_default", function() {
+//    var tmp = openFile("file://" + fileSystem.root.fullPath + "/" + "page_search.html", "text");
+//    var tmp = openFile("http://ae.subsession.net/projects/nDC/lng.json", "json");
+//    echo(tmp);
+    loadDefaultCore(nDCcoreFile);
+    logit(coreDefault);
 });
 
 $(document).on("click", "#loadJSON_server", function() {
-    coreServer = getJSON('http://ae.subsession.net/projects/nDC/lng.json');
-    console.log('coreServer loaded');
+    loadServerCore('http://ae.subsession.net/projects/nDC/lng.json');
+    logit(coreServer);
 });
 
 
-function onErrorSAVE2FS(e) {
-    console.log('>>> Error:', fileError[e.code - 1]);
-}
 function getTemplate(url) {
-    var res;
+    var res = "";
     $.ajax({
         async: false,
         url: url,
         type: "GET",
         dataType: 'html',
-        error: function (err) {
-            console.log("templateERROR: network error!");
-            console.log(err);
+        error: function () {
+            logit("templateERROR: network error! " + url);
             res = 'BAD';
         },
         success: function (result) {
             if (result) {
                 res = result;
             } else {
-                console.log("templateERROR: file not found!");
+                logit("templateERROR: file not found! " + url);
                 res = 'BAD';
             }
         }
@@ -282,43 +219,36 @@ function getTemplate(url) {
 }
 /**
  *
- * @param file
- * @param dir
- * @param url
- * @returns {boolean}
+ * @param file - filename
+ * @param url - urlname
+ * @param index - index of item
+ * @param newVersion - new version nummer
  */
-function save2FS(file, url) {
-    var status = true;
+function save2FS(file, url, index, newVersion) {
     fileSystem.root.getFile(file, {create: true}, function(f) {
-        var str = "";
-        str = getTemplate(url);
-        if (str == "BAD") {
-            return false;
-        }
-        f.createWriter(function(writerOb) {
-            writerOb.onwrite = function() {
-//                console.log("Done writing to file: ", str);
-                console.log(">>> Done writing to file: ", file);
-            };
-//        go to the end of the file...
-//        writerOb.seek(writerOb.length);
-            writerOb.write(str);
-        });
-    }, onErrorSAVE2FS);
-    return status;
+        var str = getTemplate(url);
+        if (str != "BAD") {
+            coreDefault.nDC_CORE.pages[index].version = newVersion;
+            f.createWriter(function(writerOb) {
+                writerOb.onwrite = function() {
+                    saveJSON('appCore.json', coreDefault);
+                };
+                writerOb.write(str);
+            });
+        } // #if
+    }, fileErrorMSG);
+
 }
 
 function saveJSON(fileIn, jsonIn) {
-    var status = true;
     fileSystem.root.getFile(fileIn, {create: true}, function(f) {
         f.createWriter(function(writerOb) {
             writerOb.onwrite = function() {
-                console.log(">>> Done writing to file: ", fileIn);
+                savePathToStorage('appCore.json');
             };
             writerOb.write(JSON.stringify(jsonIn));
         });
-    }, onErrorSAVE2FS);
-    return status;
+    }, fileErrorMSG);
 }
 
 /**
@@ -335,64 +265,46 @@ $(document).on("click", "#clearStorage", function() {
     console.log(">>> storage wurde entleert...");
 });
 
+/**
+ *  compare default Core with server Core,
+ *  if server page not equals to app-page, dowload this page from server with URL-link in serverCore.json
+ *
+ * @param ndcURL - json url
+  */
+function compareCore(ndcURL) {
+    getById("#content").innerHTML = "";
 
-$(document).on("click", "#compareJSON", function() {
-    console.log('================================================');
-    console.log('== compare jSON:');
-    console.log('================================================');
+    loadDefaultCore(nDCcoreFile);
+    loadServerCore(ndcURL);
+
     if (!coreServer || !coreDefault) {
-        console.log("== nothing to compare");
-        console.log('================================================');
         return false;
     }
-//    console.log('== default');
-//    console.log(coreDefault);
-//    console.log('================================================');
-//    console.log('== from server');
-//    console.log(coreServer);
-//    console.log('================================================');
+
     var i = 0,
-        j1 = coreDefault.pages,
+        j1 = coreDefault.nDC_CORE.pages,
         j2 = coreServer.pages,
         url = "",
         file = "",
-        dir = "",
-        res,
-        path;
+        dir = "";
 
     for (i in j1) {
         if (j1[i].page == j2[i].page && parseFloat(j1[i].version) < parseFloat(j2[i].version)) {
-            console.log(">>> Item", j1[i].page, "with version ", j1[i].version, "has new version", j2[i].version);
-
-            url = coreServer.url + "/" + j2[i].folder + "/" + j2[i].file;
             dir = j2[i].folder;
             file = j2[i].file;
+            url = coreServer.url + "/" + dir + "/" + file;
+            //save "file" on FileSystem into root-Directory from "URL"
+            save2FS(file, url, i, j2[i].version);
+        } //#if/page
+    } //#for/in
+}
 
-            //save "file" on FileSystem into Directory "dir" from "URL"
-            //TODO: prüfen ob DIR existiert; falls nein dann erstellen wir die
-//            res = save2FS(dir + '/' + file, url);
-            res = save2FS(file, url);
-            if (res) {
-                console.log("successfull saved file:", file, "into", dir, "from", url);
-                //TODO: test
-                j1[i].version = j2[i].version;
 
-                res = saveJSON('appCore.json', coreDefault);
-                if (res) {
-                    console.log("successfull saved file into:");
-                    path = "file://" + encodeURI(fileSystem.root.fullPath) + '/' + 'appCore.json';
-                    console.log(path);
-                    savePathToStorage(path);
-                }
-            }
-        }
-    }//#for
+$(document).on("click", "#loadTemplate", function() {
 
-//    console.log(coreDefault);
-//    console.log(coreServer);
-
-    console.log('================================================');
 });
 
-
-
+$(document).on("click", "#compareJSON", function() {
+    compareCore('http://ae.subsession.net/projects/nDC/lng.json');
+    echo("...done...");
+}); // $(document).on("click", "#compareJSON"

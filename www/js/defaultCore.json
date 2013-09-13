@@ -1,15 +1,15 @@
 {
     "nDC_CORE": {
         "pages": [
-            {"page":"login","folder":"templates","file":"page_login.html","version":"0.1"},
-            {"page":"main","folder":"templates","file":"page_main.html","version":"0.1"},
-            {"page":"makecam","folder":"templates","file":"page_makecam.html","version":"0.1"},
-            {"page":"makedoc","folder":"templates","file":"page_makedoc.html","version":"2.1"},
-            {"page":"search","folder":"templates","file":"page_search.html","version":"0.1"},
-            {"page":"startup","folder":"templates","file":"page_startup.html","version":"0.1"},
-            {"page":"upload","folder":"templates","file":"page_upload.html","version":"0.1"},
-            {"page":"newdoc","folder":"templates","file":"page_newdoc.html","version":"0.1"},
-            {"page":"oflow","folder":"templates","file":"page_oflow.html","version":"0.1"}
+            {"page":"login","folder":"templates","file":"page_login.html","version":"0.1", "path": "js/modules/tepmlates"},
+            {"page":"main","folder":"templates","file":"page_main.html","version":"0.1", "path": "js/modules/tepmlates"},
+            {"page":"makecam","folder":"templates","file":"page_makecam.html","version":"0.1", "path": "js/modules/tepmlates"},
+            {"page":"makedoc","folder":"templates","file":"page_makedoc.html","version":"2.1", "path": "js/modules/tepmlates"},
+            {"page":"search","folder":"templates","file":"page_search.html","version":"0.1", "path": "js/modules/tepmlates"},
+            {"page":"startup","folder":"templates","file":"page_startup.html","version":"0.1", "path": "js/modules/tepmlates"},
+            {"page":"upload","folder":"templates","file":"page_upload.html","version":"0.1", "path": "js/modules/tepmlates"},
+            {"page":"newdoc","folder":"templates","file":"page_newdoc.html","version":"0.1", "path": "js/modules/tepmlates"},
+            {"page":"oflow","folder":"templates","file":"page_oflow.html","version":"0.0", "path": "js/modules/tepmlates"}
         ]
     }
 }

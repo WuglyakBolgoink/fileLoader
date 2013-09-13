@@ -25,24 +25,31 @@
         <link rel="stylesheet" type="text/css" href="css/index.css" />
         <title>Hello World</title>
         <style>
-button { width: 100%; padding: 5px; }
-</style>
+            button { width: 100%; padding: 5px; }
+            #content {
+                text-transform: lowercase;
+                margin:5px;
+                padding: 2px;
+                border: 1px solid #303;
+                border-radius: 5px;
+                color: #303;
+            }
+        </style>
     </head>
     <body onload="onLoad();">
         <button id="addFileButton">Create/Append to Test File</button>
         <button id="readFileButton">Read Test File</button>
-        <button id="metadataFileButton">Get Test File Metadata</button>
         <button id="deleteFileButton">Delete Test File</button>
         <button id="dirListingButton">Show Directory Contents</button>
         <br /><br /><br />
         <button id="loadJSON_default">loadJSON_default</button>
         <button id="loadJSON_server">loadJSON_server</button>
         <button id="compareJSON">compareJSON</button>
+        <button id="loadTemplate">load template</button>
         <br /><br />
         <button id="clearStorage">clear Storage</button>
         <br /><br /><br />
         <div id="content"></div>
-        <div id="log"></div>
 
         <script type="text/javascript" src="phonegap.js"></script>
         <script type="text/javascript" src="js/jquery.js"></script>
