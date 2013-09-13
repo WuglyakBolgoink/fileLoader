@@ -1,0 +1,32 @@
+{{#if pages.ndcLOGIN.LABEL_PAGE_TITLE}}
+    <div class="row-fluid" >
+        <div class="span12 ndcPageHeader">
+            <p><img src="img/nDCimages/ndcLogoHeader.png" alt="nDcLogo" /><span>{{pages.ndcLOGIN.LABEL_PAGE_TITLE}}</span></p>
+        </div>
+    </div>
+{{/if}}
+    <div class="container-fluid">
+    <div class="row-fluid">
+        <div class="span12 ndcPage">
+            <form>
+
+                    <label class="listDivider" for="ndcLOGIN_INPUT_HNAME">{{pages.ndcLOGIN.LABEL_HNAME}}</label>
+                    <input class="input-block-level" type="url" value="http://ndc.localdomain" type="text" name="ndcLOGIN_INPUT_HNAME" id="ndcLOGIN_INPUT_HNAME" placeholder="{{pages.ndcLOGIN.LABEL_HNAME}}" required />
+                    <label class="listDivider" for="ndcLOGIN_INPUT_UNAME">{{pages.ndcLOGIN.LABEL_UNAME}}</label>
+                    <input class="input-block-level" value="" type="text" name="ndcLOGIN_INPUT_UNAME" id="ndcLOGIN_INPUT_UNAME" placeholder="{{pages.ndcLOGIN.LABEL_UNAME}}" required />
+                    <label class="listDivider" for="ndcLOGIN_INPUT_UPASS">{{pages.ndcLOGIN.LABEL_UPASS}}</label>
+                    <input class="input-block-level" value="" type="password" name="ndcLOGIN_INPUT_UPASS" id="ndcLOGIN_INPUT_UPASS" placeholder="{{pages.ndcLOGIN.LABEL_UPASS}}" required />
+                    <div class="text-center">
+                        <a id="ndcLOGIN_BTN_SUBMIT" href="#!/startupActivity" class="span6 btn btn-primary">{{pages.ndcLOGIN.BTN_SUBMIT}}</a>
+                        <a id="ndcLOGIN_BTN_CANCEL" href="" class="span6 btn">{{pages.ndcLOGIN.BTN_CANCEL}}</a>
+                    </div>
+
+            </form>
+            <br />
+            <div class='alert alert-error'>
+                <h3 class='alert-heading'>Error!</h3>
+                <span id="errMSG"></span>
+            </div>
+        </div>
+    </div>
+    </div>
