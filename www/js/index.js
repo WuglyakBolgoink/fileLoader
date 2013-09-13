@@ -28,6 +28,15 @@ function fileErrorMSG(e) {
     alert("Error");
     console.log(fileError[e.code - 1]);
 }
+
+/**
+ * save path to coreJSON in LocalStorage and update this on App
+ * @param path - URL local on App
+ */
+function savePathToStorage(path) {
+    appStorage.setItem('nDC_core_file', path);
+    nDCcoreFile = path;
+}
 // ------------------------------------------------------------------------------------------------------------------------
 // fuctions
 // ------------------------------------------------------------------------------------------------------------------------
@@ -180,18 +189,6 @@ function loadServerCore(url) {
     coreServer = openFile(url);
 }
 
-$(document).on("click", "#loadJSON_default", function() {
-//    var tmp = openFile("file://" + fileSystem.root.fullPath + "/" + "page_search.html", "text");
-//    var tmp = openFile("http://ae.subsession.net/projects/nDC/lng.json", "json");
-//    echo(tmp);
-    loadDefaultCore(nDCcoreFile);
-    logit(coreDefault);
-});
-
-$(document).on("click", "#loadJSON_server", function() {
-    loadServerCore('http://ae.subsession.net/projects/nDC/lng.json');
-    logit(coreServer);
-});
 
 
 function getTemplate(url) {
@@ -251,26 +248,13 @@ function saveJSON(fileIn, jsonIn) {
     }, fileErrorMSG);
 }
 
-/**
- * save path to coreJSON in LocalStorage and update this on App
- * @param path - URL local on App
- */
-function savePathToStorage(path) {
-    appStorage.setItem('nDC_core_file', path);
-    nDCcoreFile = path;
-}
-
-$(document).on("click", "#clearStorage", function() {
-    savePathToStorage(default_nDC_coreJSON_FilePath);
-    console.log(">>> storage wurde entleert...");
-});
 
 /**
  *  compare default Core with server Core,
  *  if server page not equals to app-page, dowload this page from server with URL-link in serverCore.json
  *
  * @param ndcURL - json url
-  */
+ */
 function compareCore(ndcURL) {
     getById("#content").innerHTML = "";
 
@@ -300,9 +284,34 @@ function compareCore(ndcURL) {
 }
 
 
-$(document).on("click", "#loadTemplate", function() {
 
+$(document).on("click", "#loadJSON_default", function() {
+//    var tmp = openFile("file://" + fileSystem.root.fullPath + "/" + "page_search.html", "text");
+//    var tmp = openFile("http://ae.subsession.net/projects/nDC/lng.json", "json");
+//    echo(tmp);
+    loadDefaultCore(nDCcoreFile);
+    logit(coreDefault);
 });
+
+$(document).on("click", "#loadJSON_server", function() {
+    loadServerCore('http://ae.subsession.net/projects/nDC/lng.json');
+    logit(coreServer);
+});
+
+
+
+
+
+$(document).on("click", "#clearStorage", function() {
+    savePathToStorage(default_nDC_coreJSON_FilePath);
+    console.log(">>> storage wurde entleert...");
+});
+
+
+
+//$(document).on("click", "#loadTemplate", function() {
+//
+//});
 
 $(document).on("click", "#compareJSON", function() {
     compareCore('http://ae.subsession.net/projects/nDC/lng.json');
